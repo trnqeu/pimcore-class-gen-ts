@@ -8,7 +8,7 @@ import type {
   LayoutDefinition,
   DataDefinition,
   PropertyVisibility,
-  // Campi specifici
+  // Specific Field Types
   InputFieldDefinition,
   TextareaFieldDefinition,
   SelectFieldDefinition,
@@ -30,8 +30,8 @@ import type {
 } from './types/pimcore-types';
 
 
-// Legge il file csv
-// legge gli argomenti per prendere il path del file
+// read csv file
+// read command line argument
 const csvFilePathArg = process.argv[2];
 
 // check if the argument is present
@@ -59,46 +59,23 @@ const csvContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 const records = parse(csvContent, {
   columns: true,
   skip_empty_lines: true,
-  delimiter: ',', // inserire il delimitatore del csv
+  delimiter: ',', // O il delimitatore che usi
 });
 
-// Definizione di un Set contenente tutti i valori della colonna 'Bundle' che vanno ignorati.
-const BUNDLES_TO_IGNORE = new Set([
-    'hierarchy_navigation',
-    'access',
-    'ca_collections',
-    'preferred_labels',
-    'nonpreferred_labels',
-    'ca_entities',
-    'ca_occurrences',
-    'ca_places',
-    'ca_loans',
-    'ca_object_lots',
-    'ca_movements',
-    'ca_objects_history'
-]);
-
-
-// Prima filtriamo i record, poi li trasformiamo in una struttura dati pulita
-const fieldSpecs: FieldSpec[] = records
-  .filter((record: any) => {
-    // Tieni il record solo se il suo 'Bundle' NON è nella lista da ignorare
-    const bundleValue = record['Bundle'];
-    return !BUNDLES_TO_IGNORE.has(bundleValue);
-  })
-  .map((record: any) => {
-    // La tua logica di normalizzazione esistente rimane invariata
-    const normalizeBundle = (bundle: string): { name: string; containerKey?: string } => {
-      let name = bundle.replace(/^ca_attribute_/, '');
-      if (name.includes('.')) {
-        const parts = name.split('.');
-        return {
-          name: parts[1],
-          containerKey: parts[0],
-        };
-      }
-      return { name };
-    };
+// Transform data into a clean typed data structure
+const fieldSpecs: FieldSpec[] = records.map((record: any) => {
+  // Clean bundle name stripping ca_attribute_
+  const normalizeBundle = (bundle: string): { name: string; containerKey?: string } => {
+    let name = bundle.replace(/^ca_attribute_/, ''); // Rimuove il prefisso
+    if (name.includes('.')) {
+      const parts = name.split('.');
+      return {
+        name: parts[1], // es. 'segnatura2'
+        containerKey: parts[0], // es. 'segnatura'
+      };
+    }
+    return { name };
+  };
 
   const normalized = normalizeBundle(record['Bundle']);
 
@@ -116,7 +93,7 @@ const fieldSpecs: FieldSpec[] = records
   };
 });
 
-console.log('Specifiche dei campi filtrate e normalizzate:', fieldSpecs);
+console.log('Normalized fieldSpecs:', fieldSpecs);
 
 // ---CLASS GENERATION---
 

@@ -37,8 +37,8 @@ exports.PimcoreClassGenerator = void 0;
 const sync_1 = require("csv-parse/sync");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-// Legge il file csv
-// legge gli argomenti per prendere il path del file
+// read csv file
+// read command line argument
 const csvFilePathArg = process.argv[2];
 // check if the argument is present
 if (!csvFilePathArg) {
@@ -59,39 +59,18 @@ const csvContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 const records = (0, sync_1.parse)(csvContent, {
     columns: true,
     skip_empty_lines: true,
-    delimiter: ',', // inserire il delimitatore del csv
+    delimiter: ',', // O il delimitatore che usi
 });
-// Definizione di un Set contenente tutti i valori della colonna 'Bundle' che vanno ignorati.
-const BUNDLES_TO_IGNORE = new Set([
-    'hierarchy_navigation',
-    'access',
-    'ca_collections',
-    'preferred_labels',
-    'nonpreferred_labels',
-    'ca_entities',
-    'ca_occurrences',
-    'ca_places',
-    'ca_loans',
-    'ca_object_lots',
-    'ca_movements',
-    'ca_objects_history'
-]);
-// Prima filtriamo i record, poi li trasformiamo in una struttura dati pulita
-const fieldSpecs = records
-    .filter((record) => {
-    // Tieni il record solo se il suo 'Bundle' NON è nella lista da ignorare
-    const bundleValue = record['Bundle'];
-    return !BUNDLES_TO_IGNORE.has(bundleValue);
-})
-    .map((record) => {
-    // La tua logica di normalizzazione esistente rimane invariata
+// Transform data into a clean typed data structure
+const fieldSpecs = records.map((record) => {
+    // Clean bundle name stripping ca_attribute_
     const normalizeBundle = (bundle) => {
-        let name = bundle.replace(/^ca_attribute_/, '');
+        let name = bundle.replace(/^ca_attribute_/, ''); // Rimuove il prefisso
         if (name.includes('.')) {
             const parts = name.split('.');
             return {
-                name: parts[1],
-                containerKey: parts[0],
+                name: parts[1], // es. 'segnatura2'
+                containerKey: parts[0], // es. 'segnatura'
             };
         }
         return { name };
@@ -110,7 +89,7 @@ const fieldSpecs = records
         containerKey: normalized.containerKey,
     };
 });
-console.log('Specifiche dei campi filtrate e normalizzate:', fieldSpecs);
+console.log('Normalized fieldSpecs:', fieldSpecs);
 // ---CLASS GENERATION---
 class PimcoreClassGenerator {
     classDefinition;
