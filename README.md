@@ -1,6 +1,14 @@
 # pimcore-class-gen-ts
 
-## Usage
+## Installazione
+
+Installazione dipendenze
+
+```bash
+npm install
+```
+
+## Utilizzo
 
 - Ripulire il csv delle righe duplicate su Google Spreadsheet
 - Lanciare lo script
@@ -15,4 +23,5 @@ node dist/main.js ./csv/esempio.csv
 
 ## To-do
 
-- Add arguments with the name of the class
+- Gestire wysiwyg?
+- Gestire localized?
